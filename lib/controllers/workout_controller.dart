@@ -24,6 +24,8 @@ class WorkoutController extends GetxController {
 }
 
   Future<void> addWorkout(WorkoutModel workout) async {
+    print("method addWorkout");
+    print(workout);
     await repository.addWorkout(workout);
     await fetchWorkouts(); // Refresh after add
   }

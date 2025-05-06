@@ -13,11 +13,7 @@ class WorkoutRepository {
     collectionId: AppwriteConstants.workoutCollectionId,
     documentId: ID.unique(),
     data: workout.toJson(),
-    permissions: [
-      Permission.read(Role.user('current')),
-      Permission.update(Role.user('current')),
-      Permission.delete(Role.user('current')),
-    ],
+    
   );
 }
 

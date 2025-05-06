@@ -56,6 +56,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
         date: selectedDate.value!,
       );
 
+      print("_submitWorkout");
+      print(workout);
+
       controller.addWorkout(workout);
       _minutesController.clear();
       _distanceController.clear();
