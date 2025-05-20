@@ -1,5 +1,6 @@
 class WorkoutModel {
   final String id;
+  final String userId; // NUEVO
   final int minutes;
   final double distance;
   final double calories;
@@ -7,6 +8,7 @@ class WorkoutModel {
 
   WorkoutModel({
     required this.id,
+    required this.userId,
     required this.minutes,
     required this.distance,
     required this.calories,
@@ -15,6 +17,7 @@ class WorkoutModel {
 
   factory WorkoutModel.fromJson(Map<String, dynamic> json) => WorkoutModel(
         id: json['\$id'],
+        userId: json['userId'], // NUEVO
         minutes: json['minutes'],
         distance: json['distance'],
         calories: json['calories'],
@@ -22,6 +25,7 @@ class WorkoutModel {
       );
 
   Map<String, dynamic> toJson() => {
+        'userId': userId, // NUEVO
         'minutes': minutes,
         'distance': distance,
         'calories': calories,

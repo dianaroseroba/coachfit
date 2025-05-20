@@ -10,23 +10,25 @@ import 'package:users_auth/controllers/auth_controller.dart';
 import 'package:users_auth/controllers/workout_controller.dart';
 
 import 'package:users_auth/presentation/pages/splash_page.dart';
-import 'package:users_auth/presentation/pages/workout_page.dart';
 import 'package:users_auth/presentation/pages/login_page.dart';
 import 'package:users_auth/presentation/pages/register_page.dart';
+import 'package:users_auth/presentation/pages/workout_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final client = AppwriteConfig.initClient();
-  final databases = Databases(client);
   final account = Account(client);
+  
+  final databases = Databases(client);
 
-  // Inicialización de dependencias
+  Get.put<Account>(account); // ← REGISTRA LA INSTANCIA
+// Inyectamos las dependencias
   Get.put(AuthRepository(account));
-  Get.put(AuthController(Get.find()));
+  Get.put(AuthController(Get.find<AuthRepository>()));
 
   Get.put(WorkoutRepository(databases));
-  Get.put(WorkoutController(repository: Get.find()));
+  Get.put(WorkoutController(repository: Get.find<WorkoutRepository>()));
 
   runApp(const MyApp());
 }
@@ -47,9 +49,9 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () => const SplashPage()),
-        GetPage(name: '/WorkoutPage', page: () => const WorkoutPage()),
         GetPage(name: '/LoginPage', page: () => LoginPage()),
-        GetPage(name: '/RegisterPage', page: () =>  RegisterPage()),
+        GetPage(name: '/RegisterPage', page: () => RegisterPage()),
+        GetPage(name: '/WorkoutPage', page: () => const WorkoutPage()),
       ],
     );
   }
