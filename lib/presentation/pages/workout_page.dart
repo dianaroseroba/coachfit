@@ -1,3 +1,4 @@
+import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:users_auth/controllers/auth_controller.dart';
 import 'package:users_auth/controllers/workout_controller.dart';
 import 'package:users_auth/model/workout_model.dart';
+import 'package:users_auth/utils/motivation_ai.dart';
 
 class WorkoutPage extends StatefulWidget {
   const WorkoutPage({super.key});
@@ -48,31 +50,39 @@ class _WorkoutPageState extends State<WorkoutPage> {
     }
   }
 
-  void _submitWorkout() {
-    if (_formKey.currentState!.validate() && selectedDate.value != null) {
-      final workout = WorkoutModel(
-        id: '',
-        userId: '', // ← agrega esto para cumplir con el constructor
-        minutes: int.parse(_minutesController.text),
-        distance: double.parse(_distanceController.text),
-        calories: double.parse(_caloriesController.text),
-        date: selectedDate.value!,
-      );
+  Future<void> _submitWorkout() async {
+  if (_formKey.currentState!.validate() && selectedDate.value != null) {
+    final account = Get.find<Account>();
+    final user = await account.get();
 
-      workoutController.addWorkout(workout);
-      _minutesController.clear();
-      _distanceController.clear();
-      _caloriesController.clear();
-      selectedDate.value = null;
+    final workout = WorkoutModel(
+      id: '',
+      userId: user.$id, // ✅ ID real del usuario logueado
+      minutes: int.parse(_minutesController.text),
+      distance: double.parse(_distanceController.text),
+      calories: double.parse(_caloriesController.text),
+      date: selectedDate.value!,
+    );
 
-      Get.snackbar(
-        '¡Buen trabajo!',
-        'Entrenamiento guardado. Sigue nadando 💪',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blue.shade100,
-      );
-    }
+    await workoutController.addWorkout(workout); // espera que guarde correctamente
+
+    // 🧠 Llama a IA solo si el registro fue exitoso
+    final message = await getMotivationalMessage();
+
+    _minutesController.clear();
+    _distanceController.clear();
+    _caloriesController.clear();
+    selectedDate.value = null;
+
+    Get.snackbar(
+      '¡Buen trabajo!',
+      message, // ✅ mensaje real de Gemini
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.blue.shade100,
+    );
   }
+}
+
 
   List<WorkoutModel> _filteredWorkouts() {
     final now = DateTime.now();
@@ -107,7 +117,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   double _calculateMaxY(List<WorkoutModel> workouts) {
     if (workouts.isEmpty) return 10;
     final maxMinutes = workouts.map((w) => w.minutes).reduce((a, b) => a > b ? a : b);
-    final roundedUp = ((maxMinutes + 39) ~/ 40) * 40; // múltiplos de 40
+    final roundedUp = ((maxMinutes + 39) ~/ 40) * 40;
     return roundedUp.toDouble();
   }
 
@@ -139,7 +149,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 👉 Formulario
               Form(
                 key: _formKey,
                 child: Column(
@@ -196,8 +205,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
                   ],
                 ),
               ),
-
-              // 👉 Gráfico de barras
               const SizedBox(height: 24),
               const Text(
                 'Gráfico de Minutos por Día',
@@ -248,8 +255,6 @@ class _WorkoutPageState extends State<WorkoutPage> {
                   ),
                 ),
               ),
-
-              // 👉 Historial
               const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
 
@@ -17,19 +18,22 @@ import 'package:users_auth/presentation/pages/workout_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ Cargar variables del archivo .env
+  await dotenv.load();
+
+  // ✅ Inicializar cliente de Appwrite
   final client = AppwriteConfig.initClient();
   final account = Account(client);
-  
   final databases = Databases(client);
 
-  Get.put<Account>(account); // ← REGISTRA LA INSTANCIA
-// Inyectamos las dependencias
-  Get.put(AuthRepository(account));
-  Get.put(AuthController(Get.find<AuthRepository>()));
+  // ✅ Inyectar dependencias en GetX
+  Get.put<Account>(account);
+  Get.put<AuthRepository>(AuthRepository(account));
+  Get.put<AuthController>(AuthController(Get.find<AuthRepository>()));
+  Get.put<WorkoutRepository>(WorkoutRepository(databases));
+  Get.put<WorkoutController>(WorkoutController(repository: Get.find<WorkoutRepository>()));
 
-  Get.put(WorkoutRepository(databases));
-  Get.put(WorkoutController(repository: Get.find<WorkoutRepository>()));
-
+  // ✅ Iniciar la app
   runApp(const MyApp());
 }
 
