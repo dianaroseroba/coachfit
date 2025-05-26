@@ -8,13 +8,14 @@ Future<String> getMotivationalMessage() async {
     return '❗ Clave API no configurada.';
   }
 
-  final model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+  final model = GenerativeModel(model: 'gemini-2.0-flash-lite', apiKey: apiKey);
 
   try {
     final prompt = "Dame una frase motivacional corta para una persona que acaba de hacer ejercicio.";
     final response = await model.generateContent([Content.text(prompt)]);
     return response.text ?? "¡Sigue adelante! 💪";
   } catch (e) {
+    print('Error al generar contenido: $e');
     return '❌ Error al generar frase IA.';
   }
 }

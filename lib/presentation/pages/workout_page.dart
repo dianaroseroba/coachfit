@@ -51,38 +51,36 @@ class _WorkoutPageState extends State<WorkoutPage> {
   }
 
   Future<void> _submitWorkout() async {
-  if (_formKey.currentState!.validate() && selectedDate.value != null) {
-    final account = Get.find<Account>();
-    final user = await account.get();
+    if (_formKey.currentState!.validate() && selectedDate.value != null) {
+      final account = Get.find<Account>();
+      final user = await account.get();
 
-    final workout = WorkoutModel(
-      id: '',
-      userId: user.$id, // ✅ ID real del usuario logueado
-      minutes: int.parse(_minutesController.text),
-      distance: double.parse(_distanceController.text),
-      calories: double.parse(_caloriesController.text),
-      date: selectedDate.value!,
-    );
+      final workout = WorkoutModel(
+        id: '',
+        userId: user.$id,
+        minutes: int.parse(_minutesController.text),
+        distance: double.parse(_distanceController.text),
+        calories: double.parse(_caloriesController.text),
+        date: selectedDate.value!,
+      );
 
-    await workoutController.addWorkout(workout); // espera que guarde correctamente
+      await workoutController.addWorkout(workout);
 
-    // 🧠 Llama a IA solo si el registro fue exitoso
-    final message = await getMotivationalMessage();
+      final message = await getMotivationalMessage();
 
-    _minutesController.clear();
-    _distanceController.clear();
-    _caloriesController.clear();
-    selectedDate.value = null;
+      _minutesController.clear();
+      _distanceController.clear();
+      _caloriesController.clear();
+      selectedDate.value = null;
 
-    Get.snackbar(
-      '¡Buen trabajo!',
-      message, // ✅ mensaje real de Gemini
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue.shade100,
-    );
+      Get.snackbar(
+        '¡Buen trabajo!',
+        message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.blue.shade100,
+      );
+    }
   }
-}
-
 
   List<WorkoutModel> _filteredWorkouts() {
     final now = DateTime.now();
@@ -95,12 +93,10 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
   List<BarChartGroupData> _generateBarChartData(List<WorkoutModel> workouts) {
     final Map<String, int> minutesPerDay = {};
-
     for (var w in workouts) {
       final key = DateFormat('MM/dd').format(w.date);
       minutesPerDay[key] = (minutesPerDay[key] ?? 0) + w.minutes;
     }
-
     final keys = minutesPerDay.keys.toList()..sort();
     return List.generate(
       keys.length,
@@ -211,50 +207,56 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                height: 220,
-                child: BarChart(
-                  BarChartData(
-                    minY: 0,
-                    maxY: maxY,
-                    gridData: FlGridData(
-                      show: true,
-                      horizontalInterval: 40,
-                    ),
-                    barGroups: chartData,
-                    titlesData: FlTitlesData(
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            if (value.toInt() < workouts.length) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  DateFormat('MM/dd').format(workouts[value.toInt()].date),
-                                  style: const TextStyle(fontSize: 10),
+              chartData.isEmpty
+                  ? const Text('No hay datos para mostrar el gráfico.')
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: Container(
+                          width: chartData.length * 60,
+                          height: 400,
+                          child: BarChart(
+                            BarChartData(
+                              minY: 0,
+                              maxY: maxY,
+                              gridData: FlGridData(show: true, horizontalInterval: 40),
+                              barGroups: chartData,
+                              borderData: FlBorderData(show: false),
+                              titlesData: FlTitlesData(
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      final index = value.toInt();
+                                      if (index >= 0 && index < workouts.length) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Text(
+                                            DateFormat('MM/dd').format(workouts[index].date),
+                                            style: const TextStyle(fontSize: 10),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
                                 ),
-                              );
-                            } else {
-                              return const SizedBox.shrink();
-                            }
-                          },
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 40,
+                                    reservedSize: 40,
+                                  ),
+                                ),
+                                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30,
-                          interval: 40,
-                        ),
-                      ),
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     ),
-                    borderData: FlBorderData(show: false),
-                  ),
-                ),
-              ),
               const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
